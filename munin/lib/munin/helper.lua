@@ -20,7 +20,7 @@ function m.fillout(t,s)
 end
 
 function m.fwrite(t,s)
-        io.write(fillout(t,s))
+        io.write(m.fillout(t,s))
 end
 --- Specific
 -- Normalice ifname and strip :
