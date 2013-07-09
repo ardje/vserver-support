@@ -1,1 +1,3 @@
+# . or src me for a test environment
 export LUA_PATH="$PWD/munin/lib/?.lua;;"
+
