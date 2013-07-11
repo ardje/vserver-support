@@ -29,5 +29,13 @@ function m.normalizeif(s)
         s=string.gsub(s,":","")
         return s
 end
+
+function m.readfile(s)
+	local f=assert(io.open(s,"r"))
+	local v=f:read("*a")	
+	f:close()
+	return v
+end
 return m
+
 
