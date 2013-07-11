@@ -1,0 +1,62 @@
+#!/bin/bash
+
+if [ "$1" = "autoconf" ]; then
+	if [ -d /dev/cgroup ]; then
+		echo yes
+		exit 0
+	else
+                echo no
+                exit 0
+        fi
+fi
+
+vserver="${0/#*_/}"
+#if [ -z "${vserver}" ]; then
+	# Silently ignore for now
+	#exit 0
+	
+#fi
+if [ "${vserver}" = "${0}" ]; then
+	vserver=""
+fi
+if ! [ -d /dev/cgroup/"${vserver}" ]; then
+	# Silently ignore for now
+	exit 0
+fi
+if [ "$1" = "config" ]
+then
+	cat <<EOF
+graph_title io service bytes ${vserver}
+graph_args --base 1000
+graph_vlabel bytes
+graph_category disk
+EOF
+	for disk in sda sdb
+	do
+	for type in Read Write Sync Async Total
+	do
+	cat <<EOF
+isb_${disk}_${type}.label ${disk}_${type}
+isb_${disk}_${type}.type DERIVE
+EOF
+	done
+	done
+	exit 0
+fi
+
+awk 'BEGIN {
+	disks["8:0"]="sda";
+	disks["8:16"]="sdb";
+	types["Read"]=0;
+	types["Write"]=0;
+	types["Sync"]=0;
+	types["Async"]=0;
+	types["Total"]=0;
+	for (d in disks) for (t in types) isb[d,t]=0;
+}
+{ isb[$1,$2] = $3 }
+END {
+	for (d in disks) for (t in types) {
+		print "isb_" disks[d] "_" t ".value " isb[d,t];
+	}
+}' /dev/cgroup/${vserver}/blkio.throttle.io_service_bytes
