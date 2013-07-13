@@ -11,8 +11,6 @@ if arg[1]== "config"
 then
         phase=config
 end
--- which output
-datatype=string.match(arg[0],"_([a-z]+)$") or "bytes"
 
 -- All fields
 local fields = {
@@ -23,13 +21,20 @@ local miscfields = {
         "rerrs","rdrop","rfifo","rframe","rcompressed","rmulticast","terrs","tdrop","tfifo","tcolls","tcarrier","tcompressed"
 }
 
+-- which output
+for _,datatype in ipairs({ "bytes", "packets", "misc" })
+do
+mh.printf([[
+multigraph interfaces_%s
+]],datatype)
+
 function config.pre(datatype)
-        mh.printf(
-[[graph_title Network Interfaces (%s)
+        mh.fwrite( [[
+graph_title Network Interfaces (${datatype})
 graph_args --base 1000
 graph_vlabel bits in (-) / out (+)
 graph_category network
-]],datatype)
+]],{ datatype=datatype })
 end
 
 function config.misc(s)
@@ -72,7 +77,7 @@ data_out_${interface}.value ${tbytes}
 end
 function data.misc(s)
         for _,v in pairs(miscfields) do
-                printf("data_%s_%s.value %s\n",v,s.interface,s[v])
+                mh.printf("data_%s_%s.value %s\n",v,s.interface,s[v])
         end
 end
 
@@ -87,6 +92,9 @@ do
                 v.interface=mh.normalizeif(v.interface)
                 phase[datatype](v)
         end
+end
+mh.printf("\n")
+
 end
 return(0)
 
